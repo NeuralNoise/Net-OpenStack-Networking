@@ -12,7 +12,7 @@ In will generate a .deb file with the proper dependencies.
 
 # DOCUMENTATION
 
-Also, after installation, you can view the documentation via `man` or `perldoc`:
+After installation, you can view the documentation using `man` or `perldoc`:
 
     man Net::OpenStack::Networking
 
