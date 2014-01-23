@@ -77,8 +77,9 @@ sub _parse_catalog {
     my $token = $data->{access}{token}{id};
 
     my @catalog = @{ $data->{access}{serviceCatalog} };
-    @catalog = grep { $_->{type} eq 'compute' } @catalog;
-    die "No compute catalog found" unless @catalog;
+    # We do not look for compute services in Net::OpenStack::Networking
+    #@catalog = grep { $_->{type} eq 'compute' } @catalog;
+    #die "No compute catalog found" unless @catalog;
     if ($self->service_name) {
         @catalog = grep { $_->{name} eq $self->service_name } @catalog;
         die "No catalog found named " . $self->service_name unless @catalog;

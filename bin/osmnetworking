@@ -1,0 +1,100 @@
+#!/usr/bin/env perl
+
+# Copyright (C) 2014 Zentyal S.L.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License, version 2, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+use strict;
+use warnings;
+use v5.10;
+use JSON qw(from_json to_json);
+use LWP;
+use Getopt::Long;
+use Net::OpenStack::Networking;
+use Data::Dumper;
+
+my $openstack_url;
+my $openstack_user;
+my $openstack_password;
+
+my $list_networks;
+my @create_network;
+my $get_network;
+my $delete_network;
+my $list_subnets;
+my @create_subnet;
+my $get_subnet;
+my $delete_subnet;
+my $options = [
+               'url=s' => \$openstack_url,
+               'user=s' => \$openstack_user,
+               'password=s' => \$openstack_password,
+               'list_networks' => \$list_networks,
+               'create_network=s{1}' => \@create_network,
+               'get_network=s' => \$get_network,
+               'delete_network=s' => \$delete_network,
+
+               'list_subnets' => \$list_subnets,
+               'create_subnet=s{3}' => \@create_subnet,
+               'get_subnet=s' => \$get_subnet,
+               'delete_subnet=s' => \$delete_subnet,
+              ];
+
+sub usage() {
+    print "usage\n" . Dumper($options) . "\n";
+}
+
+unless (GetOptions(@{$options})) {
+    usage();
+    die 'Bad options';
+}
+
+unless ($openstack_url) {
+    print "OpenStack URL needs to be provided.\n";
+    die 'Bad options';
+}
+unless ($openstack_user) {
+    print "OpenStack user needs to be provided.\n";
+    die 'Bad options';
+}
+unless ($openstack_password) {
+    print "OpenStack password needs to be provided.\n";
+    die 'Bad options';
+}
+
+my $net = Net::OpenStack::Networking->new(
+            auth_url => $openstack_url,
+            user     => $openstack_user,
+            password => $openstack_password
+        );
+
+if ($list_networks) {
+    print Dumper($net->get_networks());
+} elsif ($list_subnets) {
+    print Dumper($net->get_subnets());
+} elsif ($get_network) {
+    print Dumper($net->get_network($get_network));
+} elsif ($get_subnet) {
+    print Dumper($net->get_subnet($get_subnet));
+} elsif (@create_network) {
+    print Dumper($net->create_network({'name' => $create_network[0]}));
+} elsif (@create_subnet) {
+    print Dumper($net->create_subnet({'network_id' => $create_subnet[0], 'name' => $create_subnet[1], 'cidr' => $create_subnet[2], 'ip_version' => 4}));
+} elsif ($delete_network) {
+    print Dumper($net->delete_network($delete_network));
+} elsif ($delete_subnet) {
+    print Dumper($net->delete_subnet($delete_subnet));
+} else {
+    usage();
+}
