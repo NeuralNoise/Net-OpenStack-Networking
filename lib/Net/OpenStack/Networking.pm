@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Zentyal S.L.
+# Copyright (C) 2014 Zentyal S.L.
 # Based on Net::OpenStack::Compute by Naveed Massjouni
 # https://github.com/ironcamel/Net-OpenStack-Compute
 #
@@ -28,16 +28,16 @@ use LWP;
 has auth_url => (is => 'rw', required => 1);
 has user => (is => 'ro', required => 1);
 has password => (is => 'ro', required => 1);
-has project_id => (is => 'ro');
+has project_id => (is => 'ro', default => 'demo');
 has region => (is => 'ro');
-has service_name => (is => 'ro');
+has service_name => (is => 'ro', default => 'neutron');
 has is_rax_auth => (is => 'ro');
 has verify_ssl => (is => 'ro', default => 1);
 
 has base_url => (
     is => 'ro',
     lazy => 1,
-    default => sub { shift->_auth_info->{base_url} },
+    default => sub { shift->_auth_info->{base_url} . 'v2.0/' },
 );
 has token => (
     is => 'ro',
@@ -124,7 +124,8 @@ sub create_subnet {
     my ($self, $data) = @_;
     die "invalid data" unless $data and 'HASH' eq ref $data;
     die "network_id is required" unless defined $data->{network_id};
-    # TODO: More??
+    die "cidr is required" unless defined $data->{cidr};
+    die "ip_version is required" unless defined $data->{ip_version};
     my $res = $self->_post("/subnets", { subnet => $data });
     return from_json($res->content)->{subnet};
 }

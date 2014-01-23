@@ -4,10 +4,12 @@ use strict;
 package Net::OpenStack::Networking::Test;
 
 use base 'Test::Class';
-use Test::Most tests => 26;
+use Test::Most tests => 28;
 use Test::MockModule;
 use Test::MockObject;
 use Test::MockObject::Extends;
+
+# TODO: Check queries sent to the server
 
 sub setup_agent : Test(startup => 3) {
     my ($self) = @_;
@@ -128,7 +130,7 @@ sub test_get_subnets : Test(2) {
     is_deeply( $ret, $expected );
 }
 
-sub test_create_subnet : Test(4) {
+sub test_create_subnet : Test(6) {
     my ($self) = @_;
 
     $self->{response}->set_always('content', '{"subnet" : {"name": "foo"}}');
@@ -137,7 +139,10 @@ sub test_create_subnet : Test(4) {
     throws_ok(
         sub {
             $self->{networking}->create_subnet(
-                network_id => 'id1');
+                network_id => 'id1',
+                cidr => '192.168.10.0/24',
+                ip_version => 4
+            );
         },
         qr/invalid data/,
         'create_subnet() dies with "invalid data" if argument is not a hashref'
@@ -146,13 +151,31 @@ sub test_create_subnet : Test(4) {
     throws_ok(
         sub {
             $self->{networking}->create_subnet(
-                { foo => 'n1' });
+                { cidr => '192.168.10.0/24', ip_version => 4 });
         },
         qr/network_id is required/,
         'create_subnet() dies if no network_id provided',
     );
 
-    ok(my $ret = $self->{networking}->create_subnet({ network_id => 'id1' }));
+    throws_ok(
+        sub {
+            $self->{networking}->create_subnet(
+                { network_id => 'id1', ip_version => 4 });
+        },
+        qr/cidr is required/,
+        'create_subnet() dies if no cidr provided',
+    );
+
+    throws_ok(
+        sub {
+            $self->{networking}->create_subnet(
+                { network_id => 'id1', cidr => '192.168.10.0/24' });
+        },
+        qr/ip_version is required/,
+        'create_subnet() dies if no ip_version provided',
+    );
+
+    ok(my $ret = $self->{networking}->create_subnet({ network_id => 'id1', cidr => '192.168.10.0/24', ip_version => 4 }));
     is_deeply( $ret, $expected );
 };
 
