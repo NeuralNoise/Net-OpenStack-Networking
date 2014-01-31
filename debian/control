@@ -1,0 +1,35 @@
+Source: libnet-openstack-networking-perl
+Section: perl
+Priority: optional
+Maintainer: Rubén Durán <rduran@zentyal.com>
+Build-Depends: debhelper (>= 9.20120312)
+Build-Depends-Indep: libhttp-message-perl,
+ libjson-perl,
+ libmoose-perl,
+ libtest-class-perl,
+ libtest-mockmodule-perl,
+ libtest-mockobject-perl,
+ libtest-most-perl,
+ libwww-perl,
+ perl
+Standards-Version: 3.9.4
+Homepage: https://metacpan.org/release/Net-OpenStack-Networking
+
+Package: libnet-openstack-networking-perl
+Architecture: all
+Depends: ${misc:Depends}, ${perl:Depends},
+ libhttp-message-perl,
+ libjson-perl,
+ libmoose-perl,
+ libtest-class-perl,
+ libtest-mockmodule-perl,
+ libtest-mockobject-perl,
+ libtest-most-perl,
+ libwww-perl
+Description: (no short description found)
+ This role is used by Net::OpenStack::Compute for OpenStack authentication. It
+ supports the old 1.0 style auth,
+ Keystone|https://github.com/openstack/keystone auth, and Rackspace's RAX
+ auth.
+ .
+ This description was automagically extracted from the module by dh-make-perl.
