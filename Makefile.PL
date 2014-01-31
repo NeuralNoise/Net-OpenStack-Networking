@@ -14,6 +14,7 @@ WriteMakefile(
         "Test::MockModule" => 0,
         "Test::MockObject" => 0,
         "Test::MockObject::Extends" => 0,
+        "Devel::StackTrace" => 0,
     },
     EXE_FILES => [
         "bin/osmnetworking"

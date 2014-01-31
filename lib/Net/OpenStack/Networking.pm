@@ -24,6 +24,7 @@ use Moose;
 use HTTP::Request;
 use JSON qw(from_json to_json);
 use LWP;
+use Net::OpenStack::Exception;
 
 has auth_url => (is => 'rw', required => 1);
 has user => (is => 'ro', required => 1);
@@ -90,15 +91,15 @@ sub get_networks {
 
 sub create_network {
     my ($self, $data) = @_;
-    die "invalid data" unless $data and 'HASH' eq ref $data;
-    die "name is required" unless defined $data->{name};
+    throw Net::OpenStack::Exception("invalid data") unless $data and 'HASH' eq ref $data;
+    throw Net::OpenStack::Exception("name is required") unless defined $data->{name};
     my $res = $self->_post("/networks", { network => $data });
     return from_json($res->content)->{network};
 }
 
 sub get_network {
     my ($self, $id) = @_;
-    die "The network id is needed" unless $id;
+    throw Net::OpenStack::Exception("The network id is needed") unless $id;
     my $res = $self->_get($self->_url("/networks/$id"));
     return undef unless $res->is_success;
     return from_json($res->content)->{network};
@@ -108,7 +109,7 @@ sub get_network {
 
 sub delete_network {
     my ($self, $id) = @_;
-    die "The network id is needed" unless $id;
+    throw Net::OpenStack::Exception("The network id is needed") unless $id;
     $self->_delete($self->_url("/networks/$id"));
     return 1;
 }
@@ -122,17 +123,17 @@ sub get_subnets {
 
 sub create_subnet {
     my ($self, $data) = @_;
-    die "invalid data" unless $data and 'HASH' eq ref $data;
-    die "network_id is required" unless defined $data->{network_id};
-    die "cidr is required" unless defined $data->{cidr};
-    die "ip_version is required" unless defined $data->{ip_version};
+    throw Net::OpenStack::Exception("invalid data") unless $data and 'HASH' eq ref $data;
+    throw Net::OpenStack::Exception("network_id is required") unless defined $data->{network_id};
+    throw Net::OpenStack::Exception("cidr is required") unless defined $data->{cidr};
+    throw Net::OpenStack::Exception("ip_version is required") unless defined $data->{ip_version};
     my $res = $self->_post("/subnets", { subnet => $data });
     return from_json($res->content)->{subnet};
 }
 
 sub get_subnet {
     my ($self, $id) = @_;
-    die "The subnet id is needed" unless $id;
+    throw Net::OpenStack::Exception("The subnet id is needed") unless $id;
     my $res = $self->_get($self->_url("/subnets/$id"));
     return undef unless $res->is_success;
     return from_json($res->content)->{subnet};
@@ -142,7 +143,7 @@ sub get_subnet {
 
 sub delete_subnet {
     my ($self, $id) = @_;
-    die "The subnet id is needed" unless $id;
+    throw Net::OpenStack::Exception("The subnet id is needed") unless $id;
     $self->_delete($self->_url("/subnets/$id"));
     return 1;
 }
@@ -178,7 +179,7 @@ sub _delete {
 
 sub _check_res {
     my ($res) = @_;
-    die $res->status_line . "\n" . $res->content
+    throw Net::OpenStack::Exception($res->status_line . "\n" . $res->content)
         if ! $res->is_success and $res->code != 404;
     return 1;
 }

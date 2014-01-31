@@ -3,7 +3,8 @@ Section: perl
 Priority: optional
 Maintainer: Rubén Durán <rduran@zentyal.com>
 Build-Depends: debhelper (>= 9.20120312)
-Build-Depends-Indep: libhttp-message-perl,
+Build-Depends-Indep: libdevel-stacktrace-perl,
+ libhttp-message-perl,
  libjson-perl,
  libmoose-perl,
  libtest-class-perl,
@@ -18,6 +19,7 @@ Homepage: https://metacpan.org/release/Net-OpenStack-Networking
 Package: libnet-openstack-networking-perl
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
+ libdevel-stacktrace-perl,
  libhttp-message-perl,
  libjson-perl,
  libmoose-perl,
