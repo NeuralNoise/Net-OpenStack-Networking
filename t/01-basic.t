@@ -4,7 +4,7 @@ use strict;
 package Net::OpenStack::Networking::Test;
 
 use base 'Test::Class';
-use Test::Most tests => 28;
+use Test::Most tests => 46;
 use Test::MockModule;
 use Test::MockObject;
 use Test::MockObject::Extends;
@@ -23,6 +23,7 @@ sub setup_agent : Test(startup => 3) {
     $self->{agent}->mock('request' => sub {return $self->{response};});
     $self->{agent}->mock('get' => sub {return $self->{response};});
     $self->{agent}->mock('post' => sub {return $self->{response};});
+    $self->{agent}->mock('put' => sub {return $self->{response};});
     $self->{agent}->mock('default_header' => sub {});
 
     $self->{agent_class} = new Test::MockModule('LWP::UserAgent');
@@ -211,6 +212,130 @@ sub test_delete_subnet : Test(2) {
     );
 
     ok($self->{networking}->delete_subnet('1'));
+}
+
+
+sub test_get_routers : Test(2) {
+    my ($self) = @_;
+
+    $self->{response}->set_always('content', '{"routers" : [ {"name": "foo"}, {"name": "bar"}]}');
+    my $expected = [{'name' => 'foo'}, {'name' => 'bar'}];
+
+    ok(my $ret = $self->{networking}->get_routers());
+    is_deeply( $ret, $expected );
+}
+
+sub test_create_router : Test(4) {
+    my ($self) = @_;
+
+    $self->{response}->set_always('content', '{"router" : {"name": "router1"}}');
+    my $expected = {'name' => 'router1'};
+
+    throws_ok(
+        sub {
+            $self->{networking}->create_router(
+                name => 'router1',
+                network_id => '1',
+            );
+        },
+        qr/invalid data/,
+        'create_router() dies with "invalid data" if argument is not a hashref'
+    );
+
+    throws_ok(
+        sub {
+            $self->{networking}->create_router({});
+        },
+        qr/name is required/,
+        'create_router() dies if no name provided',
+    );
+
+    ok(my $ret = $self->{networking}->create_router({ name => 'router1'}));
+    is_deeply( $ret, $expected );
+};
+
+sub test_get_router : Test(3) {
+    my ($self) = @_;
+
+    $self->{response}->set_always('content', '{"router" : {"name": "foo"}}');
+    my $expected = {'name' => 'foo'};
+
+    throws_ok(
+        sub {
+            $self->{networking}->get_router();
+        },
+        qr/The router id is needed/,
+        'get_router() dies with "The router id is needed" if router id is not provided'
+    );
+
+    ok(my $ret = $self->{networking}->get_router('1'));
+    is_deeply( $ret, $expected );
+}
+
+sub test_delete_router : Test(2) {
+    my ($self) = @_;
+
+    $self->{response}->set_always('content', '');
+
+    throws_ok(
+        sub {
+            $self->{networking}->delete_router();
+        },
+        qr/The router id is needed/,
+        'delete_router() dies with "The router id is needed" if router id is not provided'
+    );
+
+    ok($self->{networking}->delete_router('1'));
+}
+
+sub test_add_router_interface : Test(4) {
+    my ($self) = @_;
+
+    $self->{response}->set_always('content', '{"port_id" : "1"}');
+    my $expected = '1';
+
+    throws_ok(
+        sub {
+            $self->{networking}->add_router_interface();
+        },
+        qr/The router id is needed/,
+        'add_router_interface() dies with "The router id is needed" if router id is not provided'
+    );
+
+    throws_ok(
+        sub {
+            $self->{networking}->add_router_interface('1');
+        },
+        qr/subnet id is required/,
+        'add_router_interface() dies with "subnet id is required" if subnet id is not provided'
+    );
+
+    ok(my $ret = $self->{networking}->add_router_interface('1', '1'));
+    is_deeply( $ret, $expected );
+}
+
+sub test_remove_router_interface : Test(3) {
+    my ($self) = @_;
+
+    $self->{response}->set_always('content', '');
+
+    throws_ok(
+        sub {
+            $self->{networking}->remove_router_interface();
+        },
+        qr/The router id is needed/,
+        'remove_router_interface() dies with "The router id is needed" if router id is not provided'
+    );
+
+    throws_ok(
+        sub {
+            $self->{networking}->remove_router_interface('1');
+        },
+        qr/port id is required/,
+        'remove_router_interface() dies with "port id is required" if subnet id is not provided'
+    );
+
+    ok(my $ret = $self->{networking}->remove_router_interface('1', '1'));
 }
 
 1;

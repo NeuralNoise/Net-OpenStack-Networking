@@ -85,7 +85,7 @@ sub _get_query {
 sub get_networks {
     my ($self, %params) = @_;
     my $q = _get_query(%params);
-    my $res = $self->_get($self->_url("/networks"), $q);
+    my $res = $self->_get("/networks", $q);
     return from_json($res->content)->{networks};
 }
 
@@ -100,7 +100,7 @@ sub create_network {
 sub get_network {
     my ($self, $id) = @_;
     throw Net::OpenStack::Exception("The network id is needed") unless $id;
-    my $res = $self->_get($self->_url("/networks/$id"));
+    my $res = $self->_get("/networks/$id");
     return undef unless $res->is_success;
     return from_json($res->content)->{network};
 }
@@ -110,14 +110,14 @@ sub get_network {
 sub delete_network {
     my ($self, $id) = @_;
     throw Net::OpenStack::Exception("The network id is needed") unless $id;
-    $self->_delete($self->_url("/networks/$id"));
+    $self->_delete("/networks/$id");
     return 1;
 }
 
 sub get_subnets {
     my ($self, %params) = @_;
     my $q = _get_query(%params);
-    my $res = $self->_get($self->_url("/subnets"), $q);
+    my $res = $self->_get("/subnets", $q);
     return from_json($res->content)->{subnets};
 }
 
@@ -134,7 +134,7 @@ sub create_subnet {
 sub get_subnet {
     my ($self, $id) = @_;
     throw Net::OpenStack::Exception("The subnet id is needed") unless $id;
-    my $res = $self->_get($self->_url("/subnets/$id"));
+    my $res = $self->_get("/subnets/$id");
     return undef unless $res->is_success;
     return from_json($res->content)->{subnet};
 }
@@ -144,10 +144,65 @@ sub get_subnet {
 sub delete_subnet {
     my ($self, $id) = @_;
     throw Net::OpenStack::Exception("The subnet id is needed") unless $id;
-    $self->_delete($self->_url("/subnets/$id"));
+    $self->_delete("/subnets/$id");
     return 1;
 }
 
+# l3
+
+sub get_routers {
+    my ($self, %params) = @_;
+    my $q = _get_query(%params);
+    my $res = $self->_get("/routers", $q);
+    return from_json($res->content)->{routers};
+}
+
+sub create_router {
+    my ($self, $data) = @_;
+    throw Net::OpenStack::Exception("invalid data") unless $data and 'HASH' eq ref $data;
+    throw Net::OpenStack::Exception("name is required") unless defined $data->{name};
+    #throw Net::OpenStack::Exception("network_id is required") unless defined $data->{network_id};
+    my $res = $self->_post("/routers", { router => $data });
+    return from_json($res->content)->{router};
+}
+
+sub get_router {
+    my ($self, $id) = @_;
+    throw Net::OpenStack::Exception("The router id is needed") unless $id;
+    my $res = $self->_get("/routers/$id");
+    return undef unless $res->is_success;
+    return from_json($res->content)->{router};
+}
+
+# TODO: Update (put)
+
+sub delete_router {
+    my ($self, $id) = @_;
+    throw Net::OpenStack::Exception("The router id is needed") unless $id;
+    $self->_delete("/routers/$id");
+    return 1;
+}
+
+sub add_router_interface {
+    my ($self, $id, $subnet_id) = @_;
+    throw Net::OpenStack::Exception("The router id is needed") unless $id;
+    throw Net::OpenStack::Exception("subnet id is required") unless $subnet_id;
+    my $res = $self->_put("/routers/$id/add_router_interface", { subnet_id => $subnet_id });
+    use Data::Dumper;
+    print Dumper($res);
+    return undef unless $res->is_success;
+    return from_json($res->content)->{port_id};
+}
+
+sub remove_router_interface {
+    my ($self, $id, $port_id) = @_;
+    throw Net::OpenStack::Exception("The router id is needed") unless $id;
+    throw Net::OpenStack::Exception("port id is required") unless $port_id;
+    my $res = $self->_put("/routers/$id/remove_router_interface", { port_id => $port_id });
+    return $res->is_success;
+}
+
+# Internal methods
 
 sub _url {
     my ($self, $path, $is_detail, $query) = @_;
@@ -159,7 +214,7 @@ sub _url {
 
 sub _get {
     my ($self, $url) = @_;
-    return $self->_agent->get($url);
+    return $self->_agent->get($self->_url($url));
 }
 
 sub _post {
@@ -171,9 +226,18 @@ sub _post {
     );
 }
 
+sub _put {
+    my ($self, $url, $data) = @_;
+    return $self->_agent->put(
+        $self->_url($url),
+        content_type => 'application/json',
+        content      => to_json($data),
+    );
+}
+
 sub _delete {
     my ($self, $url) = @_;
-    my $req = HTTP::Request->new(DELETE => $url);
+    my $req = HTTP::Request->new(DELETE => $self->_url($url));
     return $self->_agent->request($req);
 }
 
@@ -184,7 +248,7 @@ sub _check_res {
     return 1;
 }
 
-around qw( _get _post _delete ) => sub {
+around qw( _get _post _put _delete ) => sub {
     my $orig = shift;
     my $self = shift;
     my $res = $self->$orig(@_);

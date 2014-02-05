@@ -36,6 +36,13 @@ my $list_subnets;
 my @create_subnet;
 my $get_subnet;
 my $delete_subnet;
+my $list_routers;
+my @create_router;
+my $get_router;
+my $delete_router;
+my @add_router_interface;
+my @remove_router_interface;
+
 my $options = [
                'url=s' => \$openstack_url,
                'user=s' => \$openstack_user,
@@ -49,6 +56,13 @@ my $options = [
                'create_subnet=s{3}' => \@create_subnet,
                'get_subnet=s' => \$get_subnet,
                'delete_subnet=s' => \$delete_subnet,
+
+               'list_routers' =>  \$list_routers,
+               'create_router=s{1,2}' => \@create_router,
+               'get_router=s' => \$get_router,
+               'delete_router=s' => \$delete_router,
+               'add_router_interface=s{2}' => \@add_router_interface,
+               'remove_router_interface=s{2}' => \@remove_router_interface,
               ];
 
 sub usage() {
@@ -95,6 +109,22 @@ if ($list_networks) {
     print Dumper($net->delete_network($delete_network));
 } elsif ($delete_subnet) {
     print Dumper($net->delete_subnet($delete_subnet));
+} elsif ($list_routers) {
+    print Dumper($net->get_routers());
+} elsif ($get_router) {
+    print Dumper($net->get_router($get_router));
+} elsif (@create_router) {
+    if (scalar(@create_router) == 1) {
+        print Dumper($net->create_router({'name' => $create_router[0]}));
+    } else {
+        print Dumper($net->create_router({'name' => $create_router[0], 'external_gateway_info' => {'network_id' => $create_router[1]}}));
+    }
+} elsif ($delete_router) {
+    print Dumper($net->delete_router($delete_router));
+} elsif (@add_router_interface) {
+    print Dumper($net->add_router_interface($add_router_interface[0], $add_router_interface[1]));
+} elsif (@remove_router_interface) {
+    print Dumper($net->remove_router_interface($remove_router_interface[0], $remove_router_interface[1]));
 } else {
     usage();
 }
