@@ -17,6 +17,6 @@ WriteMakefile(
         "Devel::StackTrace" => 0,
     },
     EXE_FILES => [
-        "bin/osmnetworking"
+        "bin/osnetworking"
     ],
 );
