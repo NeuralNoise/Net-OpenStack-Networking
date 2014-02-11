@@ -188,8 +188,6 @@ sub add_router_interface {
     throw Net::OpenStack::Exception("The router id is needed") unless $id;
     throw Net::OpenStack::Exception("subnet id is required") unless $subnet_id;
     my $res = $self->_put("/routers/$id/add_router_interface", { subnet_id => $subnet_id });
-    use Data::Dumper;
-    print Dumper($res);
     return undef unless $res->is_success;
     return from_json($res->content)->{port_id};
 }
