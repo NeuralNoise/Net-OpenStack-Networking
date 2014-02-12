@@ -38,7 +38,7 @@ has verify_ssl => (is => 'ro', default => 1);
 has base_url => (
     is => 'ro',
     lazy => 1,
-    default => sub { shift->_auth_info->{base_url} . 'v2.0/' },
+    default => sub { shift->_auth_info->{base_url} . '/v2.0/' },
 );
 has token => (
     is => 'ro',
