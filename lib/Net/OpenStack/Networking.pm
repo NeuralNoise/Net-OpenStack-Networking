@@ -200,6 +200,14 @@ sub remove_router_interface {
     return $res->is_success;
 }
 
+sub remove_router_interface_by_subnet {
+    my ($self, $id, $subnet_id) = @_;
+    throw Net::OpenStack::Exception("The router id is needed") unless $id;
+    throw Net::OpenStack::Exception("subnet id is required") unless $subnet_id;
+    my $res = $self->_put("/routers/$id/remove_router_interface", { subnet_id => $subnet_id });
+    return $res->is_success;
+}
+
 # Internal methods
 
 sub _url {
